@@ -1,0 +1,25 @@
+body {
+    margin: 0;
+    background-color: black;
+    position: fixed;
+    user-select: none;
+}
+
+canvas {
+    background-color: grey;
+}
+
+.framerate {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    font-size: 30px;
+    color: white;
+    padding: 0 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.framerate .amount::before {
+    content: "\00a0";
+}
