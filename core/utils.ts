@@ -26,6 +26,8 @@ const mapData = (type: number, data: Iterable<number>) => {
 };
 const getUniformSupplyHandler = (gl: WebGL2RenderingContext, type: UniformType) : any => {
     switch(type) {
+        case UniformType.INT:
+            return gl.uniform1i.bind(gl);
         case UniformType.FLOAT:
             return gl.uniform1fv.bind(gl);
         case UniformType.VEC2:
@@ -75,8 +77,6 @@ const loadObj = async (path: string) => {
             vertices.push(components.map(Number));
         },
         f(components: Array<string>) {
-            // if(components.length !== 4) // TODO: implement a more generic parsing
-            //     return;
             const face: FaceData = [];
             for(const component of components) {
                 const componentData = component.split("/").map(Number);
@@ -158,7 +158,7 @@ const loadObj = async (path: string) => {
     };
 
     const colorData: Array<number> = [];
-    const color = [ 255, 255, 0, 255 ];
+    const color = [ 255, 105, 180, 255 ]; // pink
     for(let i = 0; i < drawData.positionData.length / 3; ++i) {
         colorData.push(...color);
     }
@@ -174,7 +174,7 @@ const checkKey = (key: string, handler: () => any) => {
     }
 };
 
-const hsv2rgb = (h: number, s: number, v: number) => {
+const hsvToRgb = (h: number, s: number, v: number) => {
     let r, g, b, i, f, p, q, t;
     i = Math.floor(h * 6);
     f = h * 6 - i;
@@ -192,8 +192,8 @@ const hsv2rgb = (h: number, s: number, v: number) => {
     return [ Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), 255 ];
 };
 
-const deg2rad = (deg: number) => (deg * Math.PI) / 180;
-const rad2deg = (rad: number) => (rad * 180) / Math.PI;
+const degToRad = (deg: number) => (deg * Math.PI) / 180;
+const radToDeg = (rad: number) => (rad * 180) / Math.PI;
 
 addEventListener("keydown", e => keys.set(e.key, true));
 addEventListener("keyup", e => keys.set(e.key, false));
@@ -212,7 +212,7 @@ export {
     uuid,
     checkKey,
     loadObj,
-    hsv2rgb,
-    deg2rad,
-    rad2deg,
+    hsvToRgb,
+    degToRad,
+    radToDeg,
 };

@@ -3,16 +3,11 @@ import Renderer from "./renderer.js";
 import { mapData, getUniformSupplyHandler, printMat4, uuid } from "./utils.js";
 import * as mgl from "./../dependencies/Math_GL/index.js";
 
-interface UniformState {
-    data: Float32Array,
-    changed?: boolean,
-}
-
 class Drawable {
-    private vao: WebGLVertexArrayObject;
     private buffers = new Map<string, WebGLBuffer>();
-    private uniforms = new Map<string, UniformState>();
+    private uniforms = new Map<string, any>();
     private visible = true;
+    protected vao: WebGLVertexArrayObject;
     
     children = new Map<string, Drawable>();
     drawData: DrawData;
@@ -36,27 +31,31 @@ class Drawable {
         this.supplyAttrib("position", drawData.positionData);
         this.supplyAttrib("color", drawData.colorData);
         this.supplyAttrib("normal", drawData.normalData);
+        this.supplyAttrib("texCoord", drawData.texCoord);
         this.supplyIndices(drawData.indexData);
+
+        this.supplyUniform("isSprite", false);
     }
 
-    private setUniforms() {
-        for(const [ name, state ] of this.uniforms) {
-            if(!state.changed) {
-                continue;
-            }
+    protected setUniforms() {
+        for(const [ name, data ] of this.uniforms) {
             const info = Renderer.uniformInfo.get(name);
             const uniformSupplyHandler = getUniformSupplyHandler(Renderer.gl, info.type);
             const uniformLoc = Renderer.uniformLoc(name);
+
             if(info.type >= UniformType.MAT2 && info.type <= UniformType.MAT4) {
-                uniformSupplyHandler(uniformLoc, info.transpose, state.data);
+                uniformSupplyHandler(uniformLoc, info.transpose, data);
             } else {
-                uniformSupplyHandler(uniformLoc, state.data);
+                uniformSupplyHandler(uniformLoc, data);
             }
-            state.changed = false;
         }
     }
     
-    supplyAttrib(name: string, rawData: Iterable<number>) {
+    private supplyAttrib(name: string, rawData?: Iterable<number>) {
+        if(!rawData) {
+            return;
+        }
+
         const buffer = this.buffers.get(name);
         const info = Renderer.attribInfo.get(name);
         const data = mapData(info.type, rawData);
@@ -68,19 +67,15 @@ class Drawable {
         Renderer.gl.vertexAttribPointer(Renderer.attribLoc(name), info.size, info.type, info.normalized, info.stride, info.offset);
     }
     
-    supplyIndices(rawData: Iterable<number>) {
+    private supplyIndices(rawData: Iterable<number>) {
         const indexBuf = this.buffers.get("index");
         const data = mapData(Renderer.gl.UNSIGNED_INT, rawData);
         Renderer.gl.bindBuffer(Renderer.gl.ELEMENT_ARRAY_BUFFER, indexBuf);
         Renderer.gl.bufferData(Renderer.gl.ELEMENT_ARRAY_BUFFER, data, Renderer.gl.STATIC_DRAW);
     }
 
-    supplyUniform(name: string, rawData: Iterable<number>) {
-        const uniformState: UniformState = {
-            data: new Float32Array(rawData),
-            changed: true,
-        };
-        this.uniforms.set(name, uniformState);
+    supplyUniform(name: string, data: any) {
+        this.uniforms.set(name, data);
     }
 
     addChild(child: Drawable, name?: string) {
@@ -88,6 +83,7 @@ class Drawable {
             name = uuid();
         }
         this.children.set(name, child);
+        return name;
     }
 
     addChildren(children: Iterable<Drawable>) {
@@ -143,10 +139,7 @@ class Drawable {
         this.supplyUniform("modelMatrixLight", new mgl.Matrix4(worldTransform).invert().transpose());
         this.setUniforms();
         
-        if(this.drawData) {
-            Renderer.gl.bindVertexArray(this.vao);
-            Renderer.gl.drawElements(Renderer.gl.TRIANGLES, this.drawData.indexData.length, Renderer.gl.UNSIGNED_INT, 0);
-        }
+        this.renderCustom();
         
         for(const drawable of this.children.values()) {
             if(!drawable.visible) {
@@ -154,6 +147,17 @@ class Drawable {
             }
             drawable.render(worldTransform);
         }
+    }
+
+    protected renderCustom() {
+        if(!this.drawData) {
+            return;
+        }
+
+        Renderer.gl.enable(Renderer.gl.DEPTH_TEST);
+        
+        Renderer.gl.bindVertexArray(this.vao);
+        Renderer.gl.drawElements(Renderer.gl.TRIANGLES, this.drawData.indexData.length, Renderer.gl.UNSIGNED_INT, 0);
     }
 }
 

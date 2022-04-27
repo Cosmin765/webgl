@@ -11,9 +11,8 @@ export var RANDOM = Math.random;
  *
  * @param {Float32ArrayConstructor | ArrayConstructor} type Array type, such as Float32Array or Array
  */
-
 export function setMatrixArrayType(type) {
-  ARRAY_TYPE = type;
+    ARRAY_TYPE = type;
 }
 var degree = Math.PI / 180;
 /**
@@ -21,9 +20,8 @@ var degree = Math.PI / 180;
  *
  * @param {Number} a Angle in Degrees
  */
-
 export function toRadian(a) {
-  return a * degree;
+    return a * degree;
 }
 /**
  * Tests whether or not the arguments have approximately the same value, within an absolute
@@ -34,17 +32,15 @@ export function toRadian(a) {
  * @param {Number} b The second number to test.
  * @returns {Boolean} True if the numbers are approximately equal, false otherwise.
  */
-
 export function equals(a, b) {
-  return Math.abs(a - b) <= EPSILON * Math.max(1.0, Math.abs(a), Math.abs(b));
+    return Math.abs(a - b) <= EPSILON * Math.max(1.0, Math.abs(a), Math.abs(b));
 }
-if (!Math.hypot) Math.hypot = function () {
-  var y = 0,
-      i = arguments.length;
-
-  while (i--) {
-    y += arguments[i] * arguments[i];
-  }
-
-  return Math.sqrt(y);
-};
+if (!Math.hypot)
+    Math.hypot = function () {
+        var y = 0, i = arguments.length;
+        while (i--) {
+            y += arguments[i] * arguments[i];
+        }
+        return Math.sqrt(y);
+    };
+//# sourceMappingURL=common.js.map

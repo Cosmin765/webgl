@@ -1,4 +1,4 @@
-import { $ } from "./utils.js";
+import { $, checkKey } from "./utils.js";
 import Program from "./program.js";
 import { AttribInfo, DataInfo, UniformInfo } from "./types.js";
 import Drawable from "./drawable.js";
@@ -10,12 +10,14 @@ class Renderer {
     private static program: Program;
     private static uniformLocations = new Map<string, WebGLUniformLocation>();
     private static attribLocations = new Map<string, number>();
+    private static inputHandlers = new Map<string, (delta: number) => void>();
 
     static gl: WebGL2RenderingContext;
     static attribInfo = new Map<string, AttribInfo>();
     static uniformInfo = new Map<string, UniformInfo>();
     static frameRate: number = 0;
     static scene = new Drawable();
+    static UI = new Drawable();
     
     static async init() {
         const canvas = document.createElement("canvas");
@@ -32,11 +34,13 @@ class Renderer {
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.enable(this.gl.CULL_FACE);
-        this.gl.enable(this.gl.DEPTH_TEST);
+
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
 
         this.program = new Program(this.gl);
-
-        await this.load();
+        await this.program.load(Renderer.VERTEX_SHADER_PATH, Renderer.FRAGMENT_SHADER_PATH);
+        
         this.gl.useProgram(this.program.get());
     }
 
@@ -56,13 +60,15 @@ class Renderer {
         return this.attribLocations.get(name);
     }
 
-    static initAttribInfo(attribInfoArr: AttribInfo[]) {
+    private static initAttribInfo(attribInfoArr: AttribInfo[]) {
+        this.attribInfo.clear();
         for(const info of attribInfoArr) {
             this.attribInfo.set(info.name, info);
         }
     }
 
-    static initUniformInfo(uniformInfoArr: UniformInfo[]) {
+    private static initUniformInfo(uniformInfoArr: UniformInfo[]) {
+        this.uniformInfo.clear();
         for(const info of uniformInfoArr) {
             this.uniformInfo.set(info.name, info);
         }
@@ -73,19 +79,39 @@ class Renderer {
         this.initUniformInfo(dataInfo.uniformInfo);
     }
 
-    static async load() {
-        await this.program.load(Renderer.VERTEX_SHADER_PATH, Renderer.FRAGMENT_SHADER_PATH);
+    static addInputHandler(key: string, callback: (delta: number) => void) {
+        this.inputHandlers.set(key, callback);
     }
 
-    static render(drawable: Drawable) {
-        drawable.render();
+    static removeInputHandler(key: string) {
+        this.inputHandlers.delete(key);
+    }
+
+    static setInputHandlers(pairs: Iterable<[ string, (delta: number) => void ]>) {
+        this.inputHandlers.clear();
+        for(const [ key, callback ] of pairs) {
+            this.addInputHandler(key, callback);
+        }
+    }
+
+    private static checkInput(delta: number) {
+        for(const [ key, callback ] of this.inputHandlers) {
+            checkKey(key, () => callback(delta));
+        }
     }
 
     static loop(update: (delta?: number) => void) {
         let last = 0;
+
+        const eye = new mgl.Vector3(0, 0, 20);
+        const target = new mgl.Vector3(eye).sub([0, 0, 1]);
+        const viewMatrix = new mgl.Matrix4().lookAt(eye, target, [ 0, 1, 0 ]);
+
         const innerLoop = (now = performance.now()) => {
             const delta = (now - last) / 1000;
             this.frameRate = 1 / delta;
+            this.checkInput(delta);
+            
             update(delta);
 
             [ this.gl.canvas.width, this.gl.canvas.height ] = [ innerWidth, innerHeight ];
@@ -101,14 +127,12 @@ class Renderer {
                 far: 10000,
             });
             
-            const eye = new mgl.Vector3(0, 0, 20);
-            const target = new mgl.Vector3(eye).sub([0, 0, 1]);
-            const viewMatrix = new mgl.Matrix4().lookAt(eye, target, [ 0, 1, 0 ]);
-            
             this.scene.supplyUniform("projectionMatrix", projectionMatrix);
             this.scene.supplyUniform("lightDirReversed", new mgl.Vector3(0, 0, 1));
             this.scene.supplyUniform("viewMatrix", viewMatrix);
+
             this.scene.render();
+            this.UI.render();
 
             last = now;
             requestAnimationFrame(innerLoop);

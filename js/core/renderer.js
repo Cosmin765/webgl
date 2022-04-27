@@ -7,7 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { $ } from "./utils.js";
+import { $, checkKey } from "./utils.js";
 import Program from "./program.js";
 import Drawable from "./drawable.js";
 import * as mgl from "./../dependencies/Math_GL/index.js";
@@ -25,9 +25,10 @@ class Renderer {
             this.gl.canvas.height = innerHeight;
             this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
             this.gl.enable(this.gl.CULL_FACE);
-            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.enable(this.gl.BLEND);
+            this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
             this.program = new Program(this.gl);
-            yield this.load();
+            yield this.program.load(Renderer.VERTEX_SHADER_PATH, Renderer.FRAGMENT_SHADER_PATH);
             this.gl.useProgram(this.program.get());
         });
     }
@@ -46,11 +47,13 @@ class Renderer {
         return this.attribLocations.get(name);
     }
     static initAttribInfo(attribInfoArr) {
+        this.attribInfo.clear();
         for (const info of attribInfoArr) {
             this.attribInfo.set(info.name, info);
         }
     }
     static initUniformInfo(uniformInfoArr) {
+        this.uniformInfo.clear();
         for (const info of uniformInfoArr) {
             this.uniformInfo.set(info.name, info);
         }
@@ -59,19 +62,32 @@ class Renderer {
         this.initAttribInfo(dataInfo.attribInfo);
         this.initUniformInfo(dataInfo.uniformInfo);
     }
-    static load() {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.program.load(Renderer.VERTEX_SHADER_PATH, Renderer.FRAGMENT_SHADER_PATH);
-        });
+    static addInputHandler(key, callback) {
+        this.inputHandlers.set(key, callback);
     }
-    static render(drawable) {
-        drawable.render();
+    static removeInputHandler(key) {
+        this.inputHandlers.delete(key);
+    }
+    static setInputHandlers(pairs) {
+        this.inputHandlers.clear();
+        for (const [key, callback] of pairs) {
+            this.addInputHandler(key, callback);
+        }
+    }
+    static checkInput(delta) {
+        for (const [key, callback] of this.inputHandlers) {
+            checkKey(key, () => callback(delta));
+        }
     }
     static loop(update) {
         let last = 0;
+        const eye = new mgl.Vector3(0, 0, 20);
+        const target = new mgl.Vector3(eye).sub([0, 0, 1]);
+        const viewMatrix = new mgl.Matrix4().lookAt(eye, target, [0, 1, 0]);
         const innerLoop = (now = performance.now()) => {
             const delta = (now - last) / 1000;
             this.frameRate = 1 / delta;
+            this.checkInput(delta);
             update(delta);
             [this.gl.canvas.width, this.gl.canvas.height] = [innerWidth, innerHeight];
             this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
@@ -84,13 +100,11 @@ class Renderer {
                 near: 1,
                 far: 10000,
             });
-            const eye = new mgl.Vector3(0, 0, 20);
-            const target = new mgl.Vector3(eye).sub([0, 0, 1]);
-            const viewMatrix = new mgl.Matrix4().lookAt(eye, target, [0, 1, 0]);
             this.scene.supplyUniform("projectionMatrix", projectionMatrix);
             this.scene.supplyUniform("lightDirReversed", new mgl.Vector3(0, 0, 1));
             this.scene.supplyUniform("viewMatrix", viewMatrix);
             this.scene.render();
+            this.UI.render();
             last = now;
             requestAnimationFrame(innerLoop);
         };
@@ -103,9 +117,11 @@ Renderer.VERTEX_SHADER_PATH = "./../shaders/vertex.glsl";
 Renderer.FRAGMENT_SHADER_PATH = "./../shaders/fragment.glsl";
 Renderer.uniformLocations = new Map();
 Renderer.attribLocations = new Map();
+Renderer.inputHandlers = new Map();
 Renderer.attribInfo = new Map();
 Renderer.uniformInfo = new Map();
 Renderer.frameRate = 0;
 Renderer.scene = new Drawable();
+Renderer.UI = new Drawable();
 export default Renderer;
 //# sourceMappingURL=renderer.js.map

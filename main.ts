@@ -1,20 +1,48 @@
 import Renderer from "./core/renderer.js";
-import { DataInfo, UniformType } from "./core/types.js";
+import { UniformType } from "./core/types.js";
 import Drawable from "./core/drawable.js";
-import { checkKey, loadObj, hsv2rgb, deg2rad } from "./core/utils.js";
+import { loadObj, hsvToRgb, degToRad } from "./core/utils.js";
+import Button from "./core/UI/button.js";
 
 window.onload = main;
 
+let drawable: Drawable = new Drawable();
+
 async function main() {
+    await setup();
+
+    const chair = new Drawable(await loadObj("./assets/obj/chair.obj"));
+    chair.supplyUniform("color", [ 1, 0, 1, 1 ]);
+    Renderer.scene.addChild(chair);
+    chair.translate([ 0, 0.5, 0 ]);
+    
+    const cup = new Drawable(await loadObj("./assets/obj/cup.obj"));
+    cup.supplyUniform("color", [ 1, 1, 0, 1 ]);
+    Renderer.scene.addChild(cup);
+
+    const button = new Button("./assets/button.png", () => console.log(this));
+    Renderer.UI.addChild(button);
+    button.translate([ 2, -5, 0 ]);
+
+    Renderer.scene.rotate([ 1, 0, 0 ]);
+
+    Renderer.loop((delta: number) => {
+        Renderer.scene.rotate([ 0, 0.01, 0 ]);
+    });
+}
+
+async function setup() {
     await Renderer.init();
 
-    const dataInfo: DataInfo = {
+    Renderer.initDataInfo({
         attribInfo: [
             { name: "position", size: 3, type: WebGL2RenderingContext.FLOAT, normalized: false, stride: 0, offset: 0 },
             { name: "color", size: 4, type: WebGL2RenderingContext.UNSIGNED_BYTE, normalized: true, stride: 0, offset: 0 },
             { name: "normal", size: 3, type: WebGL2RenderingContext.FLOAT, normalized: false, stride: 0, offset: 0 },
+            { name: "texCoord", size: 2, type: WebGL2RenderingContext.FLOAT, normalized: false, stride: 0, offset: 0 },
         ],
         uniformInfo: [
+            { name: "isSprite", type: UniformType.INT },
             { name: "projectionMatrix", type: UniformType.MAT4, transpose: false },
             { name: "lightDirReversed", type: UniformType.VEC3 },
             { name: "color", type: UniformType.VEC4 },
@@ -22,68 +50,26 @@ async function main() {
             { name: "modelMatrix", type: UniformType.MAT4, transpose: false },
             { name: "modelMatrixLight", type: UniformType.MAT4, transpose: false },
         ]
-    };
-    Renderer.initDataInfo(dataInfo);
-
-    const generateFractal = (drawable: Drawable, level: number) => {
-        if(level === 0) {
-            return;
-        }
-
-        const children = Array(6).fill(0).map(_ => new Drawable(drawable.drawData).scale(0.5));
-
-        const spacing = 1000;
-
-        children[0].translate([ 0, spacing, 0 ]);
-        children[1].translate([ spacing, 0, 0 ]);
-        children[4].translate([ 0, 0, spacing ]);
-        children[2].translate([ 0, -spacing, 0 ]);
-        children[3].translate([ -spacing, 0, 0 ]);
-        children[5].translate([ 0, 0, -spacing ]);
-
-        drawable.addChildren(children);
-
-        for(const child of children) {
-            generateFractal(child, level - 1);
-        }
-    };
-
-    const rotateRecursive = (drawable: Drawable, amount: number) => {
-        drawable.rotation.y += amount;
-
-        for(const child of drawable.children.values()) {
-            rotateRecursive(child, amount);
-        }
-    }
-
-    const drawData = await loadObj("./assets/obj/cup.obj");
-    const drawable = new Drawable(drawData);
-
-    Renderer.scene.addChild(drawable);
-    
+    });
 
     let angle = 0;
+    Renderer.setInputHandlers([
+        [ "w", (delta: number) => drawable.rotation.x -= 2 * delta ],
+        [ "a", (delta: number) => drawable.rotation.y -= 2 * delta ],
+        [ "s", (delta: number) => drawable.rotation.x += 2 * delta ],
+        [ "d", (delta: number) => drawable.rotation.y += 2 * delta ],
 
-    const update = (delta: number) => {
-        const color = hsv2rgb(deg2rad(angle), 1, 1).map(val => val / 255);
-        drawable.supplyUniform("color", color);
+        [ "ArrowUp", (delta: number) => drawable.translation.y += 10 * delta ],
+        [ "ArrowLeft", (delta: number) => drawable.translation.x -= 10 * delta ],
+        [ "ArrowDown", (delta: number) => drawable.translation.y -= 10 * delta ],
+        [ "ArrowRight", (delta: number) => drawable.translation.x += 10 * delta ],
 
-        checkKey("w", () => drawable.rotation.x -= 2 * delta);
-        checkKey("a", () => drawable.rotation.y -= 2 * delta);
-        checkKey("s", () => drawable.rotation.x += 2 * delta);
-        checkKey("d", () => drawable.rotation.y += 2 * delta);
-
-        checkKey("ArrowUp", () => drawable.translation.y += 10 * delta);
-        checkKey("ArrowLeft", () => drawable.translation.x -= 10 * delta);
-        checkKey("ArrowDown", () => drawable.translation.y -= 10 * delta);
-        checkKey("ArrowRight", () => drawable.translation.x += 10 * delta);
-
-        checkKey(" ", () => {
+        [ " ", () => {
             angle += 1;
             angle %= 360;
-        });
-        angle += 0.2;
-        angle %= 360;
-    };
-    Renderer.loop(update);
+
+            const color = hsvToRgb(degToRad(angle), 1, 1).map(el => el / 255);
+            drawable.supplyUniform("color", color);
+        } ],
+    ]);
 }

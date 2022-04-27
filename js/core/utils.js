@@ -34,6 +34,8 @@ const mapData = (type, data) => {
 };
 const getUniformSupplyHandler = (gl, type) => {
     switch (type) {
+        case UniformType.INT:
+            return gl.uniform1i.bind(gl);
         case UniformType.FLOAT:
             return gl.uniform1fv.bind(gl);
         case UniformType.VEC2:
@@ -80,8 +82,6 @@ const loadObj = (path) => __awaiter(void 0, void 0, void 0, function* () {
             vertices.push(components.map(Number));
         },
         f(components) {
-            // if(components.length !== 4) // TODO: implement a more generic parsing
-            //     return;
             const face = [];
             for (const component of components) {
                 const componentData = component.split("/").map(Number);
@@ -157,7 +157,7 @@ const loadObj = (path) => __awaiter(void 0, void 0, void 0, function* () {
         indexData: new Uint32Array(indexData),
     };
     const colorData = [];
-    const color = [255, 255, 0, 255];
+    const color = [255, 105, 180, 255]; // pink
     for (let i = 0; i < drawData.positionData.length / 3; ++i) {
         colorData.push(...color);
     }
@@ -170,7 +170,7 @@ const checkKey = (key, handler) => {
         handler();
     }
 };
-const hsv2rgb = (h, s, v) => {
+const hsvToRgb = (h, s, v) => {
     let r, g, b, i, f, p, q, t;
     i = Math.floor(h * 6);
     f = h * 6 - i;
@@ -199,9 +199,9 @@ const hsv2rgb = (h, s, v) => {
     }
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255), 255];
 };
-const deg2rad = (deg) => (deg * Math.PI) / 180;
-const rad2deg = (rad) => (rad * 180) / Math.PI;
+const degToRad = (deg) => (deg * Math.PI) / 180;
+const radToDeg = (rad) => (rad * 180) / Math.PI;
 addEventListener("keydown", e => keys.set(e.key, true));
 addEventListener("keyup", e => keys.set(e.key, false));
-export { $, loadText, loadImage, random, map, sin, cos, mapData, getUniformSupplyHandler, printMat4, uuid, checkKey, loadObj, hsv2rgb, deg2rad, rad2deg, };
+export { $, loadText, loadImage, random, map, sin, cos, mapData, getUniformSupplyHandler, printMat4, uuid, checkKey, loadObj, hsvToRgb, degToRad, radToDeg, };
 //# sourceMappingURL=utils.js.map

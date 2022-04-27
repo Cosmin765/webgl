@@ -8,6 +8,7 @@ interface AttribInfo {
 }
 
 enum UniformType {
+    INT,
     FLOAT,
     VEC2,
     VEC3,
@@ -32,7 +33,8 @@ interface DrawData {
     positionData?: Float32Array,
     colorData?: Uint8Array,
     normalData?: Float32Array,
-    indexData?: Uint32Array
+    indexData?: Uint32Array,
+    texCoord?: Float32Array
 }
 
 interface FaceComponentData {
