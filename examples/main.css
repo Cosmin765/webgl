@@ -1,0 +1,53 @@
+body {
+    margin: 0;
+    background-color: black;
+    position: fixed;
+    user-select: none;
+}
+
+canvas {
+    background-color: grey;
+}
+
+.framerate {
+    display: flex;
+    position: fixed;
+    top: 0;
+    right: 0;
+    font-size: 30px;
+    color: white;
+    padding: 0 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.framerate .amount::before {
+    content: "\00a0";
+}
+
+.examples {
+    position: fixed;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgb(51, 51, 51);
+}
+
+.examples > p {
+    padding: 5px;
+    padding-left: 20px;
+    color: white;
+    border-bottom: solid white;
+    font-size: 30px;
+    transition: all 0.3s;
+}
+
+.examples > p:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    color: cyan;
+    border-bottom: solid cyan;
+}
+
+
+.hidden {
+    display: none;
+}

@@ -28,11 +28,15 @@ class Drawable {
         }
         this.buffers.set("index", Renderer.gl.createBuffer());
 
-        this.supplyAttrib("position", drawData.positionData);
-        this.supplyAttrib("color", drawData.colorData);
-        this.supplyAttrib("normal", drawData.normalData);
-        this.supplyAttrib("texCoord", drawData.texCoord);
-        this.supplyIndices(drawData.indexData);
+        this.init();
+    }
+
+    init() {
+        this.supplyAttrib("position", this.drawData.positionData);
+        this.supplyAttrib("color", this.drawData.colorData);
+        this.supplyAttrib("normal", this.drawData.normalData);
+        this.supplyAttrib("texCoord", this.drawData.texCoord);
+        this.supplyIndices(this.drawData.indexData);
 
         this.supplyUniform("isSprite", false);
     }

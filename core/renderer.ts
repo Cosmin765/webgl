@@ -18,6 +18,8 @@ class Renderer {
     static frameRate: number = 0;
     static scene = new Drawable();
     static UI = new Drawable();
+    static eye = new mgl.Vector3(0, 0, 20);
+    static target = new mgl.Vector3(0, 0, 0);
     
     static async init() {
         const canvas = document.createElement("canvas");
@@ -102,19 +104,18 @@ class Renderer {
 
     static loop(update: (delta?: number) => void) {
         let last = 0;
-
-        const eye = new mgl.Vector3(0, 0, 20);
-        const target = new mgl.Vector3(eye).sub([0, 0, 1]);
-        const viewMatrix = new mgl.Matrix4().lookAt(eye, target, [ 0, 1, 0 ]);
-
+        
         const innerLoop = (now = performance.now()) => {
+            const viewMatrix = new mgl.Matrix4().lookAt(this.eye, this.target, [ 0, 1, 0 ]);
+
             const delta = (now - last) / 1000;
             this.frameRate = 1 / delta;
             this.checkInput(delta);
             
             update(delta);
 
-            [ this.gl.canvas.width, this.gl.canvas.height ] = [ innerWidth, innerHeight ];
+            this.gl.canvas.width = innerWidth;
+            this.gl.canvas.height = innerHeight;
             this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
             this.gl.clearColor(0, 0, 0.2, 1);
             this.gl.clearDepth(1.0);

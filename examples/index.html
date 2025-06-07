@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0 user-scalable=no">
+    <link rel="stylesheet" href="./main.css">
+    <title>Examples</title>
+</head>
+<body>
+    <script>
+        const EXAMPLES = ["playground"];
+
+        const getExamplePath = example => `../js/examples/${example}.js`;
+
+        const applyExample = async example => {
+            const holder = document.querySelector(".scripts");
+            const scripts = holder.querySelectorAll("script");
+
+            if (scripts.length !== 0) {
+                return false;
+            }
+
+            const module = await import(getExamplePath(example));
+            module.default();
+            return true;
+        }
+        
+        window.onload = async function() {
+            const example = new URLSearchParams(location.search).get('name');
+            
+            if (example !== null) {
+                await applyExample(example);
+            } else {
+                const examplesContainer = document.querySelector('.examples');
+                for (const example of EXAMPLES) {
+                    const exampleEl = document.createElement('p');
+                    exampleEl.textContent = example;
+                    const params = new URLSearchParams(location.search);
+                    params.set('name', example);
+                    const exampleUrl = location.protocol + '//' + location.host + location.pathname + '?' + params.toString();
+                    exampleEl.onclick = () => location.href = exampleUrl;
+                    examplesContainer.appendChild(exampleEl);
+                }
+                examplesContainer.classList.remove('hidden');
+            }
+        }
+    </script>
+
+    <div class="examples hidden"></div>
+
+    <div class="scripts">
+        <div class="framerate">FrameRate: <div class="amount">?</div></div>
+    </div>
+
+</body>
+</html>
