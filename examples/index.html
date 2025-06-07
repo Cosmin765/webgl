@@ -9,13 +9,14 @@
 </head>
 <body>
     <script>
-        const EXAMPLES = ["playground"];
+        const EXAMPLES = ["playground", "camera_movement"];
 
         const getExamplePath = example => `../js/examples/${example}.js`;
 
         const applyExample = async example => {
             const holder = document.querySelector(".scripts");
             const scripts = holder.querySelectorAll("script");
+            holder.classList.remove('hidden');
 
             if (scripts.length !== 0) {
                 return false;
@@ -49,7 +50,7 @@
 
     <div class="examples hidden"></div>
 
-    <div class="scripts">
+    <div class="scripts hidden">
         <div class="framerate">FrameRate: <div class="amount">?</div></div>
     </div>
 

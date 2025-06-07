@@ -3,6 +3,7 @@ import Program from "./program.js";
 import { AttribInfo, DataInfo, UniformInfo } from "./types.js";
 import Drawable from "./drawable.js";
 import * as mgl from "./../dependencies/Math_GL/index.js";
+import Camera from "./camera.js";
 
 class Renderer {
     private static VERTEX_SHADER_PATH = "./../shaders/vertex.glsl";
@@ -18,8 +19,8 @@ class Renderer {
     static frameRate: number = 0;
     static scene = new Drawable();
     static UI = new Drawable();
-    static eye = new mgl.Vector3(0, 0, 20);
-    static target = new mgl.Vector3(0, 0, 0);
+    static camera = new Camera();
+    // static target = new mgl.Vector3(0, 0, 0);
     
     static async init() {
         const canvas = document.createElement("canvas");
@@ -106,8 +107,6 @@ class Renderer {
         let last = 0;
         
         const innerLoop = (now = performance.now()) => {
-            const viewMatrix = new mgl.Matrix4().lookAt(this.eye, this.target, [ 0, 1, 0 ]);
-
             const delta = (now - last) / 1000;
             this.frameRate = 1 / delta;
             this.checkInput(delta);
@@ -130,7 +129,7 @@ class Renderer {
             
             this.scene.supplyUniform("projectionMatrix", projectionMatrix);
             this.scene.supplyUniform("lightDirReversed", new mgl.Vector3(0, 0, 1));
-            this.scene.supplyUniform("viewMatrix", viewMatrix);
+            this.scene.supplyUniform("viewMatrix", this.camera.viewMatrix);
 
             this.scene.render();
             this.UI.render();
