@@ -4,6 +4,7 @@ import Drawable from "../core/drawable.js";
 import { loadObj, hsvToRgb, degToRad } from "../core/utils.js";
 import Button from "../core/UI/button.js";
 import * as mgl from "./../dependencies/Math_GL/index.js";
+import Axes from "../core/UI/axes.js";
 
 window.onload = main;
 
@@ -28,13 +29,16 @@ async function main() {
     const chair = new Drawable(drawData);
     chair.supplyUniform("color", [ 1, 0, 1, 1 ]);
     chair.supplyUniform("useUniformColor", 0);
-    Renderer.scene.addChild(chair);
+    // Renderer.scene.addChild(chair);
     chair.translate([ 0, 0.5, 0 ]);
     
     const cup = new Drawable(await loadObj("../assets/obj/cup.obj"));
     cup.supplyUniform("color", [ 1, 1, 0, 1 ]);
     cup.supplyUniform("useUniformColor", 1);
-    Renderer.scene.addChild(cup);
+    // Renderer.scene.addChild(cup);
+
+    const arrow = await Axes.load();
+    Renderer.scene.addChild(arrow);
 
     Renderer.camera.translation = new mgl.Vector3(0, 0, 20);
     // Renderer.camera.target = new mgl.Vector3(0, 0, 0);

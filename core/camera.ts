@@ -16,8 +16,7 @@ export default class Camera {
                 .identity()
                 .translate(this.translation)
                 .rotateXYZ(this.rotation);
-            transform.invert();
-            return transform;
+            return transform.invert();
         }
     }
 }
