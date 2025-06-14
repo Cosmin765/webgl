@@ -24,6 +24,10 @@ const mapData = (type: number, data: Iterable<number>) => {
             throw "Type not implemented! (mapData)";
     }
 };
+const debug = (text) => {
+    ($(".debug") as HTMLElement).classList.remove('hidden');
+    ($(".debug > .amount") as HTMLElement).innerText = text
+};
 const getUniformSupplyHandler = (gl: WebGL2RenderingContext, type: UniformType) : any => {
     switch(type) {
         case UniformType.INT:
@@ -167,13 +171,6 @@ const loadObj = async (path: string) => {
     return drawData;
 };
 
-const keys = new Map<string, boolean>();
-const checkKey = (key: string, handler: () => any) => {
-    if(keys.get(key)) {
-        handler();
-    }
-};
-
 const hsvToRgb = (h: number, s: number, v: number) => {
     let r, g, b, i, f, p, q, t;
     i = Math.floor(h * 6);
@@ -195,9 +192,6 @@ const hsvToRgb = (h: number, s: number, v: number) => {
 const degToRad = (deg: number) => (deg * Math.PI) / 180;
 const radToDeg = (rad: number) => (rad * 180) / Math.PI;
 
-addEventListener("keydown", e => keys.set(e.key, true));
-addEventListener("keyup", e => keys.set(e.key, false));
-
 export {
     $,
     loadText,
@@ -210,9 +204,9 @@ export {
     getUniformSupplyHandler,
     printMat4,
     uuid,
-    checkKey,
     loadObj,
     hsvToRgb,
     degToRad,
     radToDeg,
+    debug,
 };

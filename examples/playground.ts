@@ -3,6 +3,8 @@ import { UniformType } from "../core/types.js";
 import Drawable from "../core/drawable.js";
 import { loadObj, hsvToRgb, degToRad } from "../core/utils.js";
 import Button from "../core/UI/button.js";
+import * as mgl from "./../dependencies/Math_GL/index.js";
+import Input from "../core/input.js";
 
 window.onload = main;
 
@@ -41,6 +43,10 @@ async function main() {
     // Renderer.UI.addChild(button);
     button.translate([ 2, -5, 0 ]);
 
+    Renderer.camera.translation = new mgl.Vector3(0, 0, 20);
+    Renderer.camera.rotation[0] = -0.2;
+    Renderer.camera.target = new mgl.Vector3(0, 0, 0);
+
     Renderer.scene.rotate([ 1, 0, 0 ]);
 
     Renderer.loop((delta: number) => {
@@ -50,6 +56,7 @@ async function main() {
 
 async function setup() {
     await Renderer.init();
+    await Input.init();
 
     Renderer.initDataInfo({
         attribInfo: [
@@ -71,7 +78,7 @@ async function setup() {
     });
 
     let angle = 0;
-    Renderer.setInputHandlers([
+    Input.setHandlers([
         [ "w", (delta: number) => drawable.rotation.x -= 2 * delta ],
         [ "a", (delta: number) => drawable.rotation.y -= 2 * delta ],
         [ "s", (delta: number) => drawable.rotation.x += 2 * delta ],

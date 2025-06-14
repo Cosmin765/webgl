@@ -118,7 +118,7 @@ class Drawable {
     }
 
     rotate(offset: Iterable<number>) {
-        this.rotation.add([...offset]);
+        this.rotation.add(offset);
         return this;
     }
 

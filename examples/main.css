@@ -24,6 +24,21 @@ canvas {
     content: "\00a0";
 }
 
+.debug {
+    display: flex;
+    position: fixed;
+    top: 10%;
+    right: 0;
+    font-size: 30px;
+    color: white;
+    padding: 0 20px;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.debug .amount::before {
+    content: "\00a0";
+}
+
 .examples {
     position: fixed;
     width: 100vw;

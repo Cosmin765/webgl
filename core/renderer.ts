@@ -1,9 +1,10 @@
-import { $, checkKey } from "./utils.js";
+import { $ } from "./utils.js";
 import Program from "./program.js";
 import { AttribInfo, DataInfo, UniformInfo } from "./types.js";
 import Drawable from "./drawable.js";
 import * as mgl from "./../dependencies/Math_GL/index.js";
 import Camera from "./camera.js";
+import Input from "./input.js";
 
 class Renderer {
     private static VERTEX_SHADER_PATH = "./../shaders/vertex.glsl";
@@ -11,8 +12,8 @@ class Renderer {
     private static program: Program;
     private static uniformLocations = new Map<string, WebGLUniformLocation>();
     private static attribLocations = new Map<string, number>();
-    private static inputHandlers = new Map<string, (delta: number) => void>();
 
+    static canvas: HTMLCanvasElement;
     static gl: WebGL2RenderingContext;
     static attribInfo = new Map<string, AttribInfo>();
     static uniformInfo = new Map<string, UniformInfo>();
@@ -20,11 +21,11 @@ class Renderer {
     static scene = new Drawable();
     static UI = new Drawable();
     static camera = new Camera();
-    // static target = new mgl.Vector3(0, 0, 0);
     
     static async init() {
         const canvas = document.createElement("canvas");
         $("body").appendChild(canvas);
+        this.canvas = canvas;
         this.gl = canvas.getContext("webgl2");
 
         if(!this.gl) {
@@ -82,34 +83,13 @@ class Renderer {
         this.initUniformInfo(dataInfo.uniformInfo);
     }
 
-    static addInputHandler(key: string, callback: (delta: number) => void) {
-        this.inputHandlers.set(key, callback);
-    }
-
-    static removeInputHandler(key: string) {
-        this.inputHandlers.delete(key);
-    }
-
-    static setInputHandlers(pairs: Iterable<[ string, (delta: number) => void ]>) {
-        this.inputHandlers.clear();
-        for(const [ key, callback ] of pairs) {
-            this.addInputHandler(key, callback);
-        }
-    }
-
-    private static checkInput(delta: number) {
-        for(const [ key, callback ] of this.inputHandlers) {
-            checkKey(key, () => callback(delta));
-        }
-    }
-
     static loop(update: (delta?: number) => void) {
         let last = 0;
         
         const innerLoop = (now = performance.now()) => {
             const delta = (now - last) / 1000;
             this.frameRate = 1 / delta;
-            this.checkInput(delta);
+            Input.check(delta);
             
             update(delta);
 
@@ -128,7 +108,12 @@ class Renderer {
             });
             
             this.scene.supplyUniform("projectionMatrix", projectionMatrix);
-            this.scene.supplyUniform("lightDirReversed", new mgl.Vector3(0, 0, 1));
+
+            const lightDirReversed = new mgl.Vector3(0, 0, -1)
+                .transformByQuaternion(this.camera.rotation)
+                .scale(-1);
+
+            this.scene.supplyUniform("lightDirReversed", lightDirReversed);
             this.scene.supplyUniform("viewMatrix", this.camera.viewMatrix);
 
             this.scene.render();
@@ -139,8 +124,7 @@ class Renderer {
         };
         requestAnimationFrame(innerLoop);
     
-        const amount = $(".amount") as HTMLElement;
-        setInterval(() => amount.innerText = this.frameRate.toFixed(0), 100);
+        setInterval(() => ($(".framerate > .amount") as HTMLElement).innerText = this.frameRate.toFixed(0), 100);
     }
 }
 
