@@ -15,22 +15,23 @@ async function main() {
     const ground = new Drawable(await loadObj('../assets/obj/cube.obj'));
     ground.supplyUniform("useUniformColor", 1);
     ground.supplyUniform("color", cts.WHITE);
-    const groundWidth = 5;
+    const groundWidth = 20;
     const groundHeight = 1;
     ground.scale([groundWidth, groundHeight, groundWidth]);
     ground.translate([0, -1, 0]);
     Renderer.scene.addChild(ground);
 
     const arrow = await Axes.load();
+    arrow.translate([0, 3, 0]);
     Renderer.scene.addChild(arrow);
     // Renderer.UI.addChild(arrow);
 
     Renderer.camera.translation = new mgl.Vector3(0, 5, 20);
-    Renderer.camera.rotation[0] = -0.1;
+    Renderer.camera.rotate(-0.1, 0);
     // Renderer.camera.target = new mgl.Vector3(0, 0, 0);
 
     Renderer.loop((delta: number) => {
-        Renderer.scene.rotate([ 0, 1.5 * delta, 0 ]);
+        // Renderer.scene.rotate([ 0, 1.5 * delta, 0 ]);
     });
 }
 
