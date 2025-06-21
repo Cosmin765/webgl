@@ -109,9 +109,12 @@ class Renderer {
             
             this.scene.supplyUniform("projectionMatrix", projectionMatrix);
 
-            const lightDirReversed = new mgl.Vector3(0, 0, -1)
-                .transformByQuaternion(this.camera.rotation)
-                .scale(-1);
+            // uncomment for controlling light with camera
+            // const lightDirReversed = new mgl.Vector3(0, 0, -1)
+            //     .transformByQuaternion(this.camera.rotation)
+            //     .scale(-1);
+
+            const lightDirReversed = new mgl.Vector3(0, 1, 1);
 
             this.scene.supplyUniform("lightDirReversed", lightDirReversed);
             this.scene.supplyUniform("viewMatrix", this.camera.viewMatrix);

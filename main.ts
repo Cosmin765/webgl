@@ -3,6 +3,7 @@ import { UniformType } from "./core/types.js";
 import Drawable from "./core/drawable.js";
 import { loadObj, hsvToRgb, degToRad } from "./core/utils.js";
 import Button from "./core/UI/button.js";
+import Input from "./core/input.js";
 
 window.onload = main;
 
@@ -53,7 +54,7 @@ async function setup() {
     });
 
     let angle = 0;
-    Renderer.setInputHandlers([
+    Input.setHandlers([
         [ "w", (delta: number) => drawable.rotation.x -= 2 * delta ],
         [ "a", (delta: number) => drawable.rotation.y -= 2 * delta ],
         [ "s", (delta: number) => drawable.rotation.x += 2 * delta ],
